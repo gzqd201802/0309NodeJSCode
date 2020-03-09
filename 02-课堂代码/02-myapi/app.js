@@ -45,9 +45,12 @@ app.post('/login', (request, response) => {
 // 请求地址：/list
 // 请求方式：get
 // 请求参数：无
+
+// 1. 读取 utils/data/hero.json 文件
+const filePath = path.join(__dirname, 'utils/data/hero.json');
+
 app.get('/list', (request, response) => {
-    // 1. 读取 utils/data/hero.json 文件
-    const filePath = path.join(__dirname, 'utils/data/hero.json');
+
     fs.readFile(filePath, (err, data) => {
         if (err) {
             // 2.1 如果读取错误
@@ -58,14 +61,60 @@ app.get('/list', (request, response) => {
         } else {
             // 2.2 把读取到的数据返回
             response.send({
-                msg:'获取成功',
-                code:200,
+                msg: '获取成功',
+                code: 200,
                 // 记得把 buffer 转换数据格式，JSON.parse() 转换的格式更好
                 data: JSON.parse(data)
             });
         }
     });
+});
 
+
+// 接口3：### 英雄新增
+// 请求地址：/add
+// 请求方式：post
+// 请求参数：请使用 formData 的方式提交
+// | name  | string | 英雄姓名 |
+// | skill | string | 英雄技能 |
+// | icon  | file | 英雄头像 |
+app.post('/add', upload.single('icon'), (request, response) => {
+    // request.file 是 `icon` 文件的信息
+    const { filename } = request.file;
+    // request.body 将具有文本数据
+    const { name, skill } = request.body;
+
+
+    // 把刚刚拼接的对象，写入到 hero.json 中。
+    // 让代码按顺序执行 - 同步写法实现。
+    //   1. 读取 hero.json 文件的内容。- 要读完才添加
+    try {
+        // 通过同步的方式读取文件，返回值是 buffer 格式数据
+        let data = JSON.parse(fs.readFileSync(filePath));
+        const dataObj = {
+            // 获取数组最后一项的 id + 1
+            id: data[data.length - 1].id + 1,
+            name,
+            skill,
+            icon: `/uploads/${filename}`,
+            isDelete: false
+        };
+        //   2. 往数据后追加刚刚准备的对象。
+        // 把 buffer 数据转换成对象，在添加数据
+        data = [...data, dataObj];
+        //   3. 写入 hero.json 文件中。
+        fs.writeFileSync(filePath, JSON.stringify(data));
+        // 4. 最后要给客户端一个响应
+        response.send({
+            code: 200,
+            msg: '新增成功'
+        });
+    } catch (error) {
+        response.send({
+            code: 400,
+            msg: '参数错误'
+        });
+    }
 });
 
 
