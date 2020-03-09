@@ -41,16 +41,16 @@ app.post('/login', (request, response) => {
     }
 });
 
+
+// 保存 utils/data/hero.json 文件的绝对路径
+const filePath = path.join(__dirname, 'utils/data/hero.json');
+
 // 接口2：### 英雄列表
 // 请求地址：/list
 // 请求方式：get
 // 请求参数：无
-
-// 1. 读取 utils/data/hero.json 文件
-const filePath = path.join(__dirname, 'utils/data/hero.json');
-
 app.get('/list', (request, response) => {
-
+    // 1. 读取 utils/data/hero.json 文件
     fs.readFile(filePath, (err, data) => {
         if (err) {
             // 2.1 如果读取错误
@@ -116,6 +116,38 @@ app.post('/add', upload.single('icon'), (request, response) => {
         });
     }
 });
+
+// 接口4： ### 英雄删除
+// 请求地址：/delete
+// 请求方式：get
+// 请求参数：
+// |  id  | number | 英雄id |
+app.get('/delete', (request, response) => {
+    // get 参数在 request.query 中获取
+    const { id } = request.query;
+    // 删除涉及到文件的操作，所以也需要读写文件
+    try {
+        // 1. 读取 hero.json 文件的内容
+        const data = JSON.parse(fs.readFileSync(filePath));
+        // 2. 根据 id 找到数据的索引
+        const index = data.findIndex(item => item.id == id);
+        // 3. 根据索引删除掉对应的数组的一条数据
+        data.splice(index, 1);
+        // 4. 把操作后的数组重新写入到文件中
+        fs.writeFileSync(filePath, JSON.stringify(data));
+        // 5. 最后要给客户端一个响应
+        response.send({
+            msg: "删除成功",
+            code: 200,
+        });
+    } catch (error) {
+        response.send({
+            msg: "参数错误",
+            code: 400,
+        });
+    }
+});
+
 
 
 // 监听端口
