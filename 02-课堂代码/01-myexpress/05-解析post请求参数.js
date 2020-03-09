@@ -29,9 +29,9 @@ app.post('/api/user/register', (request, response) => {
     // 根据文档要求，解析出 username 参数
     const { username } = request.body;
     // 判断是否为空
-    if (username.trim() === '' || username === undefined) {
+    if (username === undefined || username.trim() === '') {
         response.send('用户名不能为空');
-    }else{
+    } else {
         // 如果不为空，就返回注册成功
         response.send(`${username}注册成功`);
     }
